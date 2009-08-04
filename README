@@ -1,0 +1,63 @@
+============
+DESCRIPTION
+============
+
+check_pf (v0.1) by Kian Mohageri <kian.mohageri@gmail.com>
+
+Website: http://www.zampanosbits.com/check_pf/
+
+This plugin is intended for use with Nagios (http://nagios.org).
+
+This plugin checks the number of states in the pf (OpenBSD packet filter)
+state table, and compares this number against the WARNING and CRITICAL
+thresholds, which may be specified on the command-line or omitted.
+
+The default thresholds are based upon the current hard state limit set
+for pf(4), typically via pf.conf(5).
+
+============
+SETUP
+============
+
+This plugin needs to be able to open the pf(4) pseudo-device, which is
+mode 600 by default.  If 'nagios' is the only thing that needs access to it,
+you can change the group of the device and make it mode 640.
+
+	# chgrp nagios /dev/pf
+	# chmod 640 /dev/pf
+
+On FreeBSD 5.x and later, you will need to also make sure this persists across
+reboots when the devices are recreated.
+
+Add the following to /etc/devfs.conf:
+
+	# nrpe2/nagios needs to be able to read statistics
+	own     pf    root:nagios
+	perm    pf    0640
+
+If you can't do that or don't want to, then create a group with permission
+and make the user that runs this plugin a member of that group but DON'T just
+make the device available to everyone.
+
+============
+INSTALLATION
+============
+
+To install this plugin, do the following:
+
+	# make
+	# make install 
+
+You can manually specify the location to install the plugin:
+
+	# make install DESTDIR=/usr/local/nagios/plugins/ 
+
+You can remove it as follows:
+
+	# make uninstall DESTDIR=/usr/local/nagios/plugins/
+
+============
+FEEDBACK
+============
+
+Feel free to submit patches/feedback/suggestions: kian.mohageri@gmail.com
