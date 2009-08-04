@@ -4,8 +4,6 @@ DESCRIPTION
 
 check_pf (v0.1) by Kian Mohageri <kian.mohageri@gmail.com>
 
-Website: http://www.zampanosbits.com/check_pf/
-
 This plugin is intended for use with Nagios (http://nagios.org).
 
 This plugin checks the number of states in the pf (OpenBSD packet filter)
@@ -55,9 +53,3 @@ You can manually specify the location to install the plugin:
 You can remove it as follows:
 
 	# make uninstall DESTDIR=/usr/local/nagios/plugins/
-
-============
-FEEDBACK
-============
-
-Feel free to submit patches/feedback/suggestions: kian.mohageri@gmail.com
