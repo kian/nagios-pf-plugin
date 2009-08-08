@@ -48,10 +48,12 @@ main(int argc, char *argv[])
 	struct pfioc_limit  pl;
 	const char          *errstr;
 	const char          *pf_device;
+	const char          *msg;
 	float               percent;
 	int                 ch, wflag, cflag, dev;
 	int                 states_warning; 
 	int                 states_critical;
+	int                 ret;
 
 	pf_device = "/dev/pf"; 
 
@@ -68,20 +70,20 @@ main(int argc, char *argv[])
 			break;
 		case 'w':
 			wflag = 1;
-			states_warning = strtonum(optarg, 0, ULONG_MAX, 
+			states_warning = strtonum(optarg, 0, ULONG_MAX,
 			    &errstr);
 			if (errstr) {
-				(void)printf("PF UNKNOWN - -w is %s: %s\n",
+				printf("PF UNKNOWN - -w is %s: %s\n", 
 				    errstr, optarg);
 				return (STATE_UNKNOWN);
 			}
 			break;
 		case 'c':
 			cflag = 1;
-		        states_critical = strtonum(optarg, 0, ULONG_MAX,
+			states_critical = strtonum(optarg, 0, ULONG_MAX,
 			    &errstr);
 			if (errstr) {
-				(void)printf("PF UNKNOWN - -c is %s: %s\n",
+				printf("PF UNKNOWN - -c is %s: %s\n", 
 				    errstr, optarg);
 				return (STATE_UNKNOWN);
 			}
@@ -95,20 +97,20 @@ main(int argc, char *argv[])
 	
 	dev = open(pf_device, O_RDONLY);
 	if (dev == -1) {
-		(void)printf("PF UNKNOWN - open(\"%s\") failed\n", pf_device);
+		printf("PF UNKNOWN - open(\"%s\") failed\n", pf_device);
 		return (STATE_UNKNOWN);
 	}
 
 	memset(&ps, 0, sizeof(struct pf_status));
 	if (ioctl(dev, DIOCGETSTATUS, &ps) == -1) {
-		(void)printf("PF UNKNOWN - ioctl failed (DIOCGETSTATUS)\n");
+		printf("PF UNKNOWN - ioctl failed (DIOCGETSTATUS)\n");
 		return (STATE_UNKNOWN);
 	}
 
 	memset(&pl, 0, sizeof(struct pfioc_limit));
 	pl.index = PF_LIMIT_STATES;
 	if (ioctl(dev, DIOCGETLIMIT, &pl) == -1) {
-		(void)printf("PF UNKNOWN - ioctl failed (DIOCGETLIMIT)\n");
+		printf("PF UNKNOWN - ioctl failed (DIOCGETLIMIT)\n");
 		return (STATE_UNKNOWN);
 	}
 
@@ -120,56 +122,53 @@ main(int argc, char *argv[])
 		states_critical = pl.limit * DEFAULT_CRIT_PERCENT / 100;
 
 	if (states_warning >= states_critical) {
-		(void)printf("PF UNKNOWN - <warning> must be less than "
-            "<critical>\n");
+		printf("PF UNKNOWN - <warning> must be less than" 
+		    " <critical>\n");
 		return (STATE_UNKNOWN);
 	}
 
 	percent = (float)ps.states / (float)pl.limit * 100.0;
 
 	if (ps.running != 1) {
-		(void)printf("PF CRITICAL - status: Disabled\n");
+		printf("PF CRITICAL - status: Disabled\n");
 		return (STATE_CRITICAL);
 	}
 
 	if (ps.states >= states_critical) {
-		(void)printf("PF CRITICAL - states: %u (%.1f%% - limit: %u)\n",
-		    ps.states, percent, pl.limit);
-		return (STATE_CRITICAL);
-	}
-	
-	if (ps.states >= states_warning) {
-		(void)printf("PF WARNING - states: %u (%.1f%% - limit: %u)\n",
-		    ps.states, percent, pl.limit);
-		return (STATE_WARNING);
+		msg = "CRITICAL";
+		ret = STATE_CRITICAL;
+	} else if (ps.states >= states_warning) {
+		msg = "WARNING";
+		ret = STATE_WARNING;
+	} else {
+		msg = "OK";
+		ret = STATE_OK;
 	}
 
-	(void)printf("PF OK - states: %u (%.1f%% - limit: %u)\n",
-	    ps.states, percent, pl.limit);
-	return (STATE_OK);
+	printf("PF %s - states: %u (%.1f%% - limit: %u) |"
+	    " states=%u;%u;%u;%u;%u\n",
+	    msg, ps.states, percent, pl.limit,
+	    ps.states, states_warning, states_critical, 0, pl.limit);
+
+	return (ret);
 }
 
 static void
 version(void)
 {
-	(void)fprintf(stderr, "%s %s\n", __progname, revision);
+	fprintf(stderr, "%s %s\n", __progname, revision);
 }
 
 static void
 usage(void)
 {
-	(void)fprintf(stderr, "Usage: %s [-Vh] [-w number] [-c number]\n",
+	fprintf(stderr,
+	    "Usage: %s [-Vh] [-w number] [-c number]\n"
+	    "\t-V        - Print the plugin version\n"
+	    "\t-h        - Print the plugin help\n"
+	    "\t-w number - Warning when <number> states"
+	    "\t-c number - Critical when <number> states", 
 	    __progname);
-	(void)fprintf(stderr, "        ");
-	(void)fprintf(stderr, "-V        - Print the plugin version\n");
-	(void)fprintf(stderr, "        ");
-	(void)fprintf(stderr, "-h        - Print the plugin help\n");
-	(void)fprintf(stderr, "        ");
-	(void)fprintf(stderr, "-w number - Warning when <number> states"
-	    " (default: %u%% of state limit)\n", DEFAULT_WARN_PERCENT);
-	(void)fprintf(stderr, "        ");
-	(void)fprintf(stderr, "-c number - Critical when <number> states"
-	    " (default: %u%% of state limit)\n", DEFAULT_CRIT_PERCENT);
 	exit(EXIT_FAILURE);
 }
 
@@ -177,14 +176,14 @@ static void
 help(void)
 {
 	version();
-	(void)fprintf(stderr, "\n");
-	(void)fprintf(stderr, "This plugin checks if PF is enabled, and if ");
-	(void)fprintf(stderr, "it is, the number of states\n");
-	(void)fprintf(stderr, "currently in the state table.\n");
-	(void)fprintf(stderr, "\n");
-	(void)fprintf(stderr, "The current state count is compared to the ");
-	(void)fprintf(stderr, "given (or default) thresholds and\n");
-	(void)fprintf(stderr, "the proper Nagios state value is returned.\n");
-	(void)fprintf(stderr, "\n");
+	fprintf(stderr, 
+	    "\n"
+	    "This plugin checks whether PF is enabled, and if so, the\n"
+	    "number of states in the state table.\n"
+	    "\n"
+	    "The current state count is compared to the given or\n"
+	    "default plugin thresholds and the appropriate Nagios state\n"
+	    "is returned.\n"
+	    "\n");
 	usage();
 }
