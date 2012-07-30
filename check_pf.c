@@ -38,10 +38,10 @@
 
 /* return values used by Nagios */
 enum {
-	STATE_OK,
-	STATE_WARNING,
-	STATE_CRITICAL,
-	STATE_UNKNOWN
+    STATE_OK,
+    STATE_WARNING,
+    STATE_CRITICAL,
+    STATE_UNKNOWN
 };
 
 static void version(void);
@@ -60,16 +60,16 @@ extern char *__progname;
 int 
 main(int argc, char *argv[])
 {
-	struct pf_status	ps;
-	struct pfioc_limit	pl;
-	const char			*errstr;
-	const char			*pf_device;
-	const char			*msg;
-	float				percent;
-	int					ch, wflag, cflag, dev;
-	int					states_warning; 
-	int					states_critical;
-	int					ret;
+	struct pf_status    ps;
+	struct pfioc_limit  pl;
+	const char          *errstr;
+	const char          *pf_device;
+	const char          *msg;
+	float               percent;
+	int                 ch, wflag, cflag, dev;
+	int                 states_warning; 
+	int                 states_critical;
+	int                 ret;
 
 	pf_device = "/dev/pf"; 
 
@@ -88,8 +88,7 @@ main(int argc, char *argv[])
 			wflag = 1;
 			states_warning = strtonum(optarg, 0, UINT_MAX, &errstr);
 			if (errstr) {
-				printf("PF UNKNOWN - -w is %s: %s\n", 
-					errstr, optarg);
+				printf("PF UNKNOWN - -w is %s: %s\n", errstr, optarg);
 				return (STATE_UNKNOWN);
 			}
 			break;
@@ -97,8 +96,7 @@ main(int argc, char *argv[])
 			cflag = 1;
 			states_critical = strtonum(optarg, 0, UINT_MAX, &errstr);
 			if (errstr) {
-				printf("PF UNKNOWN - -c is %s: %s\n", 
-					errstr, optarg);
+				printf("PF UNKNOWN - -c is %s: %s\n", errstr, optarg);
 				return (STATE_UNKNOWN);
 			}
 			break;
@@ -159,8 +157,8 @@ main(int argc, char *argv[])
 	}
 
 	printf("PF %s - states: %u (%.1f%% - limit: %u) | states=%u;%u;%u;%u;%u\n",
-		msg, ps.states, percent, pl.limit,
-		ps.states, states_warning, states_critical, 0, pl.limit);
+	    msg, ps.states, percent, pl.limit,
+	    ps.states, states_warning, states_critical, 0, pl.limit);
 
 	return (ret);
 }
@@ -175,12 +173,12 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-		"Usage: %s [-Vh] [-w number] [-c number]\n"
-		"\t-V		 - Print the plugin version\n"
-		"\t-h		 - Print the plugin help\n"
-		"\t-w number - Warning when <number> states\n"
-		"\t-c number - Critical when <number> states\n", 
-		__progname);
+	    "Usage: %s [-Vh] [-w number] [-c number]\n"
+	    "\t-V         - Print the plugin version\n"
+	    "\t-h         - Print the plugin help\n"
+	    "\t-w number  - Warning when <number> states\n"
+	    "\t-c number  - Critical when <number> states\n", 
+	    __progname);
 	exit(EXIT_FAILURE);
 }
 
@@ -189,13 +187,13 @@ help(void)
 {
 	version();
 	fprintf(stderr, 
-		"\n"
-		"This plugin checks whether PF is enabled, and if so, the\n"
-		"number of states in the state table.\n"
-		"\n"
-		"The current state count is compared to the given or\n"
-		"default plugin thresholds and the appropriate Nagios state\n"
-		"is returned.\n"
-		"\n");
+	    "\n"
+	    "This plugin checks whether PF is enabled, and if so, the\n"
+	    "number of states in the state table.\n"
+	    "\n"
+	    "The current state count is compared to the given or\n"
+	    "default plugin thresholds and the appropriate Nagios state\n"
+	    "is returned.\n"
+	    "\n");
 	usage();
 }
